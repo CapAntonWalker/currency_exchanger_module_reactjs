@@ -1,0 +1,9 @@
+.clearInput input{
+    border: hidden;
+    width: 100%;
+    margin: 0px;
+}
+.clearInput input:focus{
+    outline: 0;
+    border: 0px;
+}
