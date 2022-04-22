@@ -1,2 +1,2 @@
 # Build hosted by github pages
-https://capantonwalker.github.io/currencychanger/
+https://capantonwalker.github.io/currencychanger_reactjs/
