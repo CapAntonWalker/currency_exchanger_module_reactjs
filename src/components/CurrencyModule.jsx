@@ -10,65 +10,78 @@ const CurrencyModule = ({currencySymbols}) => {
     const [selectedSymbol2, setSelectedSymbol2] = useState(currencySymbols.at(0).symbol);
     
     const [multplyer, setMultiplyer] = useState(1);
-    const [titleVal, setTitleVal] = useState('Exchanger UAH');
-
+    const [titleVal, setTitleVal] = useState('Exchanger');
+    const mainSymbol = 'UAH';
 
     useEffect(()=>{
-        let tempVal = ''
+        let tempVal = '';
+        let hasMainSymbol=true;
 
-        Object.keys(currencySymbols).forEach(element => {
-            if (element < Object.keys(currencySymbols).length - 1){
-                tempVal = Object.values(currencySymbols[element])[0] +'_UAH';
-                fetch('https://free.currconv.com/api/v7/convert?'+
-                'q='+ tempVal + 
-                '&compact=ultra&apiKey=914738d5aaba748df38d')
-                .then(response => response.json())
-                .then(data => {
-                if (!Object.keys(data).includes('error')){ 
-                    tempVal = JSON.stringify(data).slice(1,-1)
-                    while (tempVal.indexOf('"') !== -1){
-                        tempVal = tempVal.replace('"','')
+        if (selectedSymbol1 !== mainSymbol && selectedSymbol2 !== mainSymbol){
+            tempVal = `${selectedSymbol1}_${mainSymbol},${selectedSymbol2}_${mainSymbol}`;
+            if (selectedSymbol1 === selectedSymbol2){
+                hasMainSymbol=false;
+                tempVal = `${selectedSymbol1}_${mainSymbol}`;
+            }
+        } else if (selectedSymbol1 !== mainSymbol){
+            tempVal = `${selectedSymbol1}_${mainSymbol}`;
+        } else if (selectedSymbol2 !== mainSymbol){
+            tempVal = `${selectedSymbol2}_${mainSymbol}`;
+        } else{
+            tempVal = '-1';
+        }
+        console.log('command to api: '+ tempVal);
+        
+        if(tempVal !== '' || tempVal !== '-1'){
+            console.log('command to api sended')
+            fetch('https://free.currconv.com/api/v7/convert?'+
+            'q='+ tempVal + 
+            '&compact=ultra&apiKey=914738d5aaba748df38d')
+            .then(response => response.json())
+            .then(data => {
+                if (!Object.keys(data).includes('error')){
+                    if(Object.values(data).length === 2){
+                        setMultiplyer(Object.values(data)[0]/Object.values(data)[1]);
+                        setTitleVal(`| ${mainSymbol} | ${Object.keys(data)[0].replace(`_${mainSymbol}`, '')}: ${Object.values(data)[0]}, `+ 
+                        `${Object.keys(data)[1].replace(`_${mainSymbol}`,'')}: ${Object.values(data)[1]}`);
+                    } else{
+                        if(hasMainSymbol){
+                            setMultiplyer(Object.values(data)[0])
+                        } else{
+                            setMultiplyer(1)
+                        }
+
+                        setTitleVal(`| ${mainSymbol} | ${Object.keys(data)[0].replace(`_${mainSymbol}`,'')}: ${Object.values(data)[0]}`);
                     }
-                    tempVal = tempVal.replace('_UAH','')
-                    setTitleVal(titleVal + ' | ' + tempVal);
+                    
                 }
                 else{
-                    console.log('Problem with api')
+                    setMultiplyer(1);
+                    console.error('ERROR:Problem with api')
                 }
             });
-            }
-        });
-        console.log('trigered change of title')
-    },[titleVal,currencySymbols]);
-    
-    document.title = titleVal;
-    
-    fetch('https://free.currconv.com/api/v7/convert?'+
-    'q='+ selectedSymbol1 +'_' + selectedSymbol2 + 
-    '&compact=ultra&apiKey=914738d5aaba748df38d')
-    .then(response => response.json())
-    .then(data => {
-        if (!Object.keys(data).includes('error')){ 
-            setMultiplyer(Object.values(data)[0]);
-        }
-        else{
+        } else{
             setMultiplyer(1);
-            console.log('Problem with api')
+            if(tempVal !== '-1'){
+                console.error('ERROR:Empty selectors')
+            }
         }
-    });
+    },[selectedSymbol1,selectedSymbol2]);
+
+    document.title = titleVal;
 
     function updateValue(value, code, updateValue){
         
         updateValue(code === 2 
             ? value * multplyer 
             : value / multplyer);
-        console.log(multplyer);
+        console.log('multiplaer used: ' + multplyer);
     }
 
     function updateCurrency(func, val){
         func(val);
-        setVal1(0); 
-        setVal2(0);
+        setVal1(0)
+        setVal2(0)
     }
     
 
@@ -84,7 +97,7 @@ const CurrencyModule = ({currencySymbols}) => {
                 setSelectedSymbol = {tempSymbol => 
                     updateCurrency(setSelectedSymbol1,tempSymbol)}/>
             <CurrencyChanger currencySymbols = {currencySymbols}
-                moduleName ='Value input field #2'
+                moduleName ='Value input field #1'
                 valIn = {val2} 
                 setVal1 = {onChangeVal => setVal2(onChangeVal)}
                 setVal2 = {onBlurVal =>
