@@ -1,4 +1,4 @@
-import React,{useState} from "react";
+import React,{useEffect, useState} from "react";
 import CurrencyChanger from "./UI/div/CurrencyChanger";
 
 const CurrencyModule = ({currencySymbols}) => {
@@ -12,30 +12,35 @@ const CurrencyModule = ({currencySymbols}) => {
     const [multplyer, setMultiplyer] = useState(1);
     const [titleVal, setTitleVal] = useState('Exchanger UAH');
 
-    let tempVal = ''
 
-    Object.keys(currencySymbols).forEach(element => {
-        if (element < Object.keys(currencySymbols).length - 1){
-            tempVal += Object.values(currencySymbols[element])[0] +'_UAH,';
-        }
-    });
-    tempVal = tempVal.slice(0,-1);
-    fetch('https://free.currconv.com/api/v7/convert?'+
-        'q='+ tempVal + 
-        '&compact=ultra&apiKey=914738d5aaba748df38d')
-        .then(response => response.json())
-        .then(data => {
-            if (!Object.keys(data).includes('error')){ 
-                tempVal = JSON.stringify(data).slice(1,-1)
-                while (tempVal.indexOf('"') !== -1){
-                    tempVal = tempVal.replace('"','')
+    useEffect(()=>{
+        let tempVal = ''
+
+        Object.keys(currencySymbols).forEach(element => {
+            if (element < Object.keys(currencySymbols).length - 1){
+                tempVal = Object.values(currencySymbols[element])[0] +'_UAH';
+                fetch('https://free.currconv.com/api/v7/convert?'+
+                'q='+ tempVal + 
+                '&compact=ultra&apiKey=914738d5aaba748df38d')
+                .then(response => response.json())
+                .then(data => {
+                if (!Object.keys(data).includes('error')){ 
+                    tempVal = JSON.stringify(data).slice(1,-1)
+                    while (tempVal.indexOf('"') !== -1){
+                        tempVal = tempVal.replace('"','')
+                    }
+                    tempVal = tempVal.replace('_UAH','')
+                    setTitleVal(titleVal + ' | ' + tempVal);
                 }
-                setTitleVal(titleVal + ' | ' + tempVal);
-            }
-            else{
-                console.log('Problem with api')
+                else{
+                    console.log('Problem with api')
+                }
+            });
             }
         });
+        console.log('trigered change of title')
+    },[titleVal,currencySymbols]);
+    
     document.title = titleVal;
     
     fetch('https://free.currconv.com/api/v7/convert?'+
@@ -70,7 +75,7 @@ const CurrencyModule = ({currencySymbols}) => {
     return(
         <div>
             <CurrencyChanger currencySymbols = {currencySymbols}
-                moduleName ='from'
+                moduleName ='Value input field #1'
                 valIn = {val1} 
                 setVal1 = {onChangeVal => setVal1(onChangeVal)}
                 setVal2 = {onBlurVal => 
@@ -79,7 +84,7 @@ const CurrencyModule = ({currencySymbols}) => {
                 setSelectedSymbol = {tempSymbol => 
                     updateCurrency(setSelectedSymbol1,tempSymbol)}/>
             <CurrencyChanger currencySymbols = {currencySymbols}
-                moduleName ='to'
+                moduleName ='Value input field #2'
                 valIn = {val2} 
                 setVal1 = {onChangeVal => setVal2(onChangeVal)}
                 setVal2 = {onBlurVal =>
