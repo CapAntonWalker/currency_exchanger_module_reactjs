@@ -1,8 +1,7 @@
-import React,{useEffect, useState} from "react";
+import React,{useState} from "react";
 import CurrencyChanger from "./UI/div/CurrencyChanger";
 
 const CurrencyModule = ({currencySymbols}) => {
-    //USD-EUR / RUB-EUR = RUB-USD
     
     const [val1, setVal1] = useState(1);
     const [val2, setVal2] = useState(1);
@@ -10,57 +9,47 @@ const CurrencyModule = ({currencySymbols}) => {
     const [selectedSymbol1, setSelectedSymbol1] = useState(currencySymbols.at(0).symbol);
     const [selectedSymbol2, setSelectedSymbol2] = useState(currencySymbols.at(0).symbol);
     
-    let multplyer = 1;
-    let titleVal = 'Exchanger';
+    const [multplyer, setMultiplyer] = useState(1);
+    const [titleVal, setTitleVal] = useState('Exchanger UAH');
 
-    useEffect(()=>{
-        let tempStr = '';
-        currencySymbols.forEach(element => {
-            tempStr += element.symbol + ',';
-        });
-        tempStr = tempStr.slice(0,-1);
+    let tempVal = ''
 
-        fetch('http://api.exchangeratesapi.io/v1/latest' +
-            '?access_key=acb7050b95a2e2cfd3962ab3c843248c' +
-            '&symbols=' + tempStr)
+    Object.keys(currencySymbols).forEach(element => {
+        if (element < Object.keys(currencySymbols).length - 1){
+            tempVal += Object.values(currencySymbols[element])[0] +'_UAH,';
+        }
+    });
+    tempVal = tempVal.slice(0,-1);
+    fetch('https://free.currconv.com/api/v7/convert?'+
+        'q='+ tempVal + 
+        '&compact=ultra&apiKey=914738d5aaba748df38d')
         .then(response => response.json())
         .then(data => {
-            if(Object.keys(data)[0] !== 'error'){
-                tempStr = JSON.stringify(data.rates);
-                tempStr = tempStr.slice(1,-1);
-                while(tempStr.indexOf('"') !== -1){
-                    tempStr = tempStr.replace('"','')
+            if (!Object.keys(data).includes('error')){ 
+                tempVal = JSON.stringify(data).slice(1,-1)
+                while (tempVal.indexOf('"') !== -1){
+                    tempVal = tempVal.replace('"','')
                 }
-                document.title = titleVal + '|' + tempStr;
+                setTitleVal(titleVal + ' | ' + tempVal);
             }
-            else 
-                console.error('Api serverside problem')
-        });
-    },[]);
-
-    useEffect(() =>{
-        fetch('http://api.exchangeratesapi.io/v1/latest' +
-            '?access_key=acb7050b95a2e2cfd3962ab3c843248c' +
-            '&symbols=' + selectedSymbol2 +
-            ',' + selectedSymbol1)
-        .then(response => response.json())
-        .then(data => {
-            if(Object.keys(data)[0] !== 'error'){
-                if(Object.keys(data.rates).length === 2){
-                    const convertPart1 = Object.values(data.rates)[0];
-                    const convertPart2 = Object.values(data.rates)[1];
-
-                    multplyer = convertPart1 / convertPart2;
-
-                    return(multplyer);
-                }
-                else{
-                    console.log('error: wrong ammount of rates');
-                }
+            else{
+                console.log('Problem with api')
             }
-            else 
-                console.error('Api serverside problem')
         });
+    document.title = titleVal;
+    
+    fetch('https://free.currconv.com/api/v7/convert?'+
+    'q='+ selectedSymbol1 +'_' + selectedSymbol2 + 
+    '&compact=ultra&apiKey=914738d5aaba748df38d')
+    .then(response => response.json())
+    .then(data => {
+        if (!Object.keys(data).includes('error')){ 
+            setMultiplyer(Object.values(data)[0]);
+        }
+        else{
+            setMultiplyer(1);
+            console.log('Problem with api')
+        }
     });
 
     function updateValue(value, code, updateValue){
@@ -69,6 +58,12 @@ const CurrencyModule = ({currencySymbols}) => {
             ? value * multplyer 
             : value / multplyer);
         console.log(multplyer);
+    }
+
+    function updateCurrency(func, val){
+        func(val);
+        setVal1(0); 
+        setVal2(0);
     }
     
 
@@ -82,8 +77,7 @@ const CurrencyModule = ({currencySymbols}) => {
                     updateValue(onBlurVal, 2, setVal2)}
                 selectedSymbol = {selectedSymbol1}
                 setSelectedSymbol = {tempSymbol => 
-                    (setSelectedSymbol1(tempSymbol),
-                    setVal1(0), setVal2(0))}/>
+                    updateCurrency(setSelectedSymbol1,tempSymbol)}/>
             <CurrencyChanger currencySymbols = {currencySymbols}
                 moduleName ='to'
                 valIn = {val2} 
@@ -92,8 +86,7 @@ const CurrencyModule = ({currencySymbols}) => {
                     updateValue(onBlurVal, 1, setVal1)}
                 selectedSymbol = {selectedSymbol2}
                 setSelectedSymbol = {tempSymbol => 
-                    (setSelectedSymbol2(tempSymbol), 
-                    setVal1(0), setVal2(0))}/>
+                    updateCurrency(setSelectedSymbol2,tempSymbol)}/>
         </div>
     )
 }

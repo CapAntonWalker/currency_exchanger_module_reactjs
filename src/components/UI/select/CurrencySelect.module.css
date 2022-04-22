@@ -1,4 +1,58 @@
-.customSelect{
-    display: relative;
-    color: red;
+.customSelect select{
+    height: 44px;
+    padding: 0.5em 3em 0.5em 1.5em;
+    background-color: #4b5061;
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+}
+
+.customSelect option:disabled{
+    font-weight: bold;
+    color: rgba(255,255,255,0.5);
+}
+
+.customSelect {
+    position: relative;
+}
+
+.customArrow{
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: block;
+    background: #3a3e4b;
+    border-radius: 24px;
+    height: 100%;
+    width: 4rem;
+    pointer-events: none;
+}
+
+.customArrow::before,
+.customArrow::after{
+    --size: 0.6em;
+    --color: rgba(255,255,255,0.5);
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.customArrow::before{
+    border-left: var(--size) solid transparent;
+    border-right: var(--size) solid transparent;
+    border-bottom: var(--size) solid var(--color);
+    top: 25%;
+}
+
+.customArrow::after{
+    
+    border-left: var(--size) solid transparent;
+    border-right: var(--size) solid transparent;
+    border-top: var(--size) solid var(--color);
+    top: 70%;
 }

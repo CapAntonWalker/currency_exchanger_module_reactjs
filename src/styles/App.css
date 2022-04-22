@@ -10,8 +10,8 @@
 }
 
 .App{
-    align-items: center;
+    display: flex;
+    justify-content: center;
     white-space: nowrap;
-    background-color:red;
     width: auto;
 }
